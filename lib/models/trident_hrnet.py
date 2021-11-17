@@ -101,53 +101,21 @@ class Bottleneck(nn.Module):
 # Todo: Using TridentNet's idea
 class TridentBlock(nn.module):
     def __init__(self, inplanes, planes, stride=1, dilation=None, downsample=None):
-        super(Bottleneck, self).__init__()
-        # Dilation == 1
-        if dilation == 1:
-            self.conv1 = nn.Conv2d(inplanes, planes, kernel_size=1, bias=False)
-            self.bn1 = nn.BatchNorm2d(planes, momentum=BN_MOMENTUM)
-            self.conv2 = nn.Conv2d(planes, planes, kernel_size=3, stride=stride,
-                                   dilation=1, padding=1, bias=False)
-            self.bn2 = nn.BatchNorm2d(planes, momentum=BN_MOMENTUM)
-            self.conv3 = nn.Conv2d(planes, planes * self.expansion, kernel_size=1,
-                                   bias=False)
-            self.bn3 = nn.BatchNorm2d(planes * self.expansion,
-                                      momentum=BN_MOMENTUM)
-            self.relu = nn.ReLU(inplace=True)
-            self.downsample = downsample
-            self.stride = stride
-        # Dilation == 2
-        elif dilation == 2:
-            self.conv1 = nn.Conv2d(inplanes, planes, kernel_size=1, bias=False)
-            self.bn1 = nn.BatchNorm2d(planes, momentum=BN_MOMENTUM)
-            self.conv2 = nn.Conv2d(planes, planes, kernel_size=3, stride=stride,
-                                   dilation=2, padding=1, bias=False)
-            self.bn2 = nn.BatchNorm2d(planes, momentum=BN_MOMENTUM)
-            self.conv3 = nn.Conv2d(planes, planes * self.expansion, kernel_size=1,
-                                   bias=False)
-            self.bn3 = nn.BatchNorm2d(planes * self.expansion,
-                                      momentum=BN_MOMENTUM)
-            self.relu = nn.ReLU(inplace=True)
-            self.downsample = downsample
-            self.stride = stride
-        # Dilation == 3
-        elif dilation == 3:
-            self.conv1 = nn.Conv2d(inplanes, planes, kernel_size=1, bias=False)
-            self.bn1 = nn.BatchNorm2d(planes, momentum=BN_MOMENTUM)
-            self.conv2 = nn.Conv2d(planes, planes, kernel_size=3, stride=stride,
-                                   dilation=3, padding=1, bias=False)
-            self.bn2 = nn.BatchNorm2d(planes, momentum=BN_MOMENTUM)
-            self.conv3 = nn.Conv2d(planes, planes * self.expansion, kernel_size=1,
-                                   bias=False)
-            self.bn3 = nn.BatchNorm2d(planes * self.expansion,
-                                      momentum=BN_MOMENTUM)
-            self.relu = nn.ReLU(inplace=True)
-            self.downsample = downsample
-            self.stride = stride
-        else:
-            error_msg = 'Dilation Parameter Error'
-            logger.error(error_msg)
-            raise ValueError(error_msg)
+        super(TridentBlock, self).__init__()
+
+        # Share weight
+        self.conv1 = nn.Conv2d(inplanes, planes, kernel_size=1, bias=False)
+        self.bn1 = nn.BatchNorm2d(planes, momentum=BN_MOMENTUM)
+        self.conv2 = nn.Conv2d(planes, planes, kernel_size=3, stride=stride,
+                               dilation=dilation, padding=1, bias=False)
+        self.bn2 = nn.BatchNorm2d(planes, momentum=BN_MOMENTUM)
+        self.conv3 = nn.Conv2d(planes, planes * self.expansion, kernel_size=1,
+                               bias=False)
+        self.bn3 = nn.BatchNorm2d(planes * self.expansion,
+                                  momentum=BN_MOMENTUM)
+        self.relu = nn.ReLU(inplace=True)
+        self.downsample = downsample
+        self.stride = stride
 
     def forward(self, x):
         residual = x
