@@ -100,12 +100,15 @@ class Bottleneck(nn.Module):
 
 # Todo: Using TridentNet's idea
 class TridentBlock(nn.Module):
-    expansion = 4
+    expansion = 1
 
     def __init__(self, inplanes, planes, stride=1, downsample=None):
         super(TridentBlock, self).__init__()
 
-        self.conv1 = nn.Conv2d(inplanes, planes, kernel_size=1, bias=False)
+        self.conv0 = conv3x3(inplanes, planes, stride)
+        self.bn0 = nn.BatchNorm2d(planes, momentum=BN_MOMENTUM)
+
+        self.conv1 = nn.Conv2d(planes, planes, kernel_size=1, bias=False)
         self.bn1 = nn.BatchNorm2d(planes, momentum=BN_MOMENTUM)
 
         self.d1_conv2 = nn.Conv2d(planes, planes, kernel_size=3, stride=stride,
@@ -124,15 +127,17 @@ class TridentBlock(nn.Module):
         self.downsample = downsample
         self.stride = stride
 
-        # weight sharing
+        # weight sharing????
         self.d2_conv2.weight = self.d1_conv2.weight
         self.d3_conv2.weight = self.d1_conv2.weight
 
     def forward(self, x):
         residual = x
 
+        a = self.conv0(x)
+
         # Dilation 1
-        out1 = self.conv1(x)
+        out1 = self.conv1(a)
         out1 = self.bn1(out1)
         out1 = self.relu(out1)
 
@@ -150,7 +155,7 @@ class TridentBlock(nn.Module):
         out1 = self.relu(out1)
 
         # Dilation 2
-        out2 = self.conv1(x)
+        out2 = self.conv1(a)
         out2 = self.bn1(out2)
         out2 = self.relu(out2)
 
@@ -168,7 +173,7 @@ class TridentBlock(nn.Module):
         out2 = self.relu(out2)
 
         # Dilation 3
-        out3 = self.conv1(x)
+        out3 = self.conv1(a)
         out3 = self.bn1(out3)
         out3 = self.relu(out3)
 
@@ -186,8 +191,8 @@ class TridentBlock(nn.Module):
         out3 = self.relu(out3)
 
         # jji: concatination이 맞음?
-        out = torch.cat((out1, out2, out3), 0)
-        print(out.shape)
+        #out = torch.cat((out1, out2, out3), 0)
+        out = out1 + out2 + out3
 
         return out
 
