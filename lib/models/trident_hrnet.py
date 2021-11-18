@@ -100,14 +100,19 @@ class Bottleneck(nn.Module):
 
 # Todo: Using TridentNet's idea
 class TridentBlock(nn.module):
-    def __init__(self, inplanes, planes, stride=1, dilation=None, downsample=None):
+    def __init__(self, inplanes, planes, stride=1, downsample=None):
         super(TridentBlock, self).__init__()
 
-        # Share weight
         self.conv1 = nn.Conv2d(inplanes, planes, kernel_size=1, bias=False)
         self.bn1 = nn.BatchNorm2d(planes, momentum=BN_MOMENTUM)
-        self.conv2 = nn.Conv2d(planes, planes, kernel_size=3, stride=stride,
-                               dilation=dilation, padding=1, bias=False)
+
+        self.d1_conv2 = nn.Conv2d(planes, planes, kernel_size=3, stride=stride,
+                               dilation=1, padding=1, bias=False)
+        self.d2_conv2 = nn.Conv2d(planes, planes, kernel_size=3, stride=stride,
+                               dilation=2, padding=2, bias=False)
+        self.d3_conv2 = nn.Conv2d(planes, planes, kernel_size=3, stride=stride,
+                               dilation=3, padding=3, bias=False)
+
         self.bn2 = nn.BatchNorm2d(planes, momentum=BN_MOMENTUM)
         self.conv3 = nn.Conv2d(planes, planes * self.expansion, kernel_size=1,
                                bias=False)
@@ -117,25 +122,69 @@ class TridentBlock(nn.module):
         self.downsample = downsample
         self.stride = stride
 
+        # weight sharing
+        self.d2_conv2.weight = self.d1_conv2.weight
+        self.d3_conv2.weight = self.d1_conv2.weight
+
     def forward(self, x):
         residual = x
 
-        out = self.conv1(x)
-        out = self.bn1(out)
-        out = self.relu(out)
+        # Dilation 1
+        out1 = self.conv1(x)
+        out1 = self.bn1(out1)
+        out1 = self.relu(out1)
 
-        out = self.conv2(out)
-        out = self.bn2(out)
-        out = self.relu(out)
+        out1 = self.d1_conv2(out1)
+        out1 = self.bn2(out1)
+        out1 = self.relu(out1)
 
-        out = self.conv3(out)
-        out = self.bn3(out)
+        out1 = self.conv3(out1)
+        out1 = self.bn3(out1)
 
         if self.downsample is not None:
             residual = self.downsample(x)
 
-        out += residual
-        out = self.relu(out)
+        out1 += residual
+        out1 = self.relu(out1)
+
+        # Dilation 2
+        out2 = self.conv1(x)
+        out2 = self.bn1(out2)
+        out2 = self.relu(out2)
+
+        out2 = self.d2_conv2(out2)
+        out2 = self.bn2(out2)
+        out2 = self.relu(out2)
+
+        out2 = self.conv3(out2)
+        out2 = self.bn3(out2)
+
+        if self.downsample is not None:
+            residual = self.downsample(x)
+
+        out2 += residual
+        out2 = self.relu(out2)
+
+        # Dilation 3
+        out3 = self.conv1(x)
+        out3 = self.bn1(out3)
+        out3 = self.relu(out3)
+
+        out3 = self.d3_conv2(out3)
+        out3 = self.bn2(out3)
+        out3 = self.relu(out3)
+
+        out3 = self.conv3(out3)
+        out3 = self.bn3(out3)
+
+        if self.downsample is not None:
+            residual = self.downsample(x)
+
+        out3 += residual
+        out3 = self.relu(out3)
+
+        # jji: concatination이 맞음?
+        out = torch.cat[out1, out2, out3]
 
         return out
 
@@ -332,7 +381,7 @@ class PoseHighResolutionNet(nn.Module):
         self.layer1 = self._make_layer(Bottleneck, 64, 4)
 
         self.stage2_cfg = extra['STAGE2']
-        num_channels = self.stage2_cfg['NUM_CHANNELS']
+        num_channels = self.stage2_cfg['NUM_CHANNELS'] # 32, 64
         block = blocks_dict[self.stage2_cfg['BLOCK']]
         num_channels = [
             num_channels[i] * block.expansion for i in range(len(num_channels))
