@@ -99,7 +99,9 @@ class Bottleneck(nn.Module):
 
 
 # Todo: Using TridentNet's idea
-class TridentBlock(nn.module):
+class TridentBlock(nn.Module):
+    expansion = 4
+
     def __init__(self, inplanes, planes, stride=1, downsample=None):
         super(TridentBlock, self).__init__()
 
@@ -184,7 +186,8 @@ class TridentBlock(nn.module):
         out3 = self.relu(out3)
 
         # jji: concatination이 맞음?
-        out = torch.cat[out1, out2, out3]
+        out = torch.cat((out1, out2, out3), 0)
+        print(out.shape)
 
         return out
 
