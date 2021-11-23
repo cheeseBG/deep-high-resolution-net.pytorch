@@ -127,9 +127,12 @@ class TridentBlock(nn.Module):
         self.downsample = downsample
         self.stride = stride
 
-        # weight sharing????
+        # assigning weights
         self.d2_conv2.weight = self.d1_conv2.weight
         self.d3_conv2.weight = self.d1_conv2.weight
+
+        # using weights and functional conv to check weight sharing
+        self.weight = self.d1_conv2.weight
 
     def forward(self, x):
         residual = x
@@ -157,9 +160,11 @@ class TridentBlock(nn.Module):
         # Dilation 2
         out2 = self.conv1(a)
         out2 = self.bn1(out2)
-        out2 = self.relu(out2)
+        out_t2 = self.relu(out2)
 
-        out2 = self.d2_conv2(out2)
+        out2 = self.d2_conv2(out_t2)
+        out_2_functional = F.conv2d(out_t2, weight=self.weight, dilation=(2, 2), stride=(1, 1), padding=(2, 2))
+        print(out2.sum() == out_2_functional.sum())  # checking if the outputs are same.
         out2 = self.bn2(out2)
         out2 = self.relu(out2)
 
@@ -175,9 +180,11 @@ class TridentBlock(nn.Module):
         # Dilation 3
         out3 = self.conv1(a)
         out3 = self.bn1(out3)
-        out3 = self.relu(out3)
+        out_t3 = self.relu(out3)
 
-        out3 = self.d3_conv2(out3)
+        out3 = self.d3_conv2(out_t3)
+        out_3_functional = F.conv2d(out_t3, weight=self.weight, dilation=(3, 3), stride=(1, 1), padding=(3, 3))
+        print(out3.sum() == out_3_functional.sum())  # checking if the outputs are same.
         out3 = self.bn2(out3)
         out3 = self.relu(out3)
 
@@ -599,3 +606,10 @@ def get_pose_net(cfg, is_train, **kwargs):
         model.init_weights(cfg['MODEL']['PRETRAINED'])
 
     return model
+
+
+# ### Test TridentBlock ###
+if __name__ == '__main__':
+    x = torch.rand(1, 3, 64, 64)
+    net = TridentBlock(3, 3)
+    net(x)
