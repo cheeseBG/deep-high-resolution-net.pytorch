@@ -121,6 +121,7 @@ class TridentBlock(nn.Module):
         self.bn2 = nn.BatchNorm2d(planes, momentum=BN_MOMENTUM)
         self.downsample = downsample
         self.stride = stride
+
         # assigning weights
         self.d2_conv2.weight = self.d1_conv2.weight
         self.d3_conv2.weight = self.d1_conv2.weight
@@ -181,9 +182,9 @@ class TridentBlock(nn.Module):
 
         # jji: concatination이 맞음?
         #out = torch.cat((out1, out2, out3), 0)
-        out = out1 + out2 + out3
+        total_out = out1 + out2 + out3
 
-        return out
+        return total_out
 
 
 class HighResolutionModule(nn.Module):
