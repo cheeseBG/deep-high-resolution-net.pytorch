@@ -106,12 +106,13 @@ class TridentBlock(nn.Module):
     def __init__(self, inplanes, planes, stride=1, downsample=None):
         super(TridentBlock, self).__init__()
 
-        self.conv0 = conv3x3(inplanes, planes, stride)
-        self.bn0 = nn.BatchNorm2d(planes, momentum=BN_MOMENTUM)
-
-        self.conv1 = nn.Conv2d(planes, planes, kernel_size=1, bias=False)
+        self.conv1 = conv3x3(inplanes, planes, stride)
         self.bn1 = nn.BatchNorm2d(planes, momentum=BN_MOMENTUM)
+        self.relu = nn.ReLU(inplace=True)
+        self.conv2 = conv3x3(planes, planes)
+        self.bn2 = nn.BatchNorm2d(planes, momentum=BN_MOMENTUM)
 
+        # Trident
         self.d1_conv2 = nn.Conv2d(planes, planes, kernel_size=3, stride=stride,
                                dilation=1, padding=1, bias=False)
         self.d2_conv2 = nn.Conv2d(planes, planes, kernel_size=3, stride=stride,
@@ -120,14 +121,8 @@ class TridentBlock(nn.Module):
                                dilation=3, padding=3, bias=False)
 
         self.bn2 = nn.BatchNorm2d(planes, momentum=BN_MOMENTUM)
-        self.conv3 = nn.Conv2d(planes, planes * self.expansion, kernel_size=1,
-                               bias=False)
-        self.bn3 = nn.BatchNorm2d(planes * self.expansion,
-                                  momentum=BN_MOMENTUM)
-        self.relu = nn.ReLU(inplace=True)
         self.downsample = downsample
         self.stride = stride
-
         # assigning weights
         self.d2_conv2.weight = self.d1_conv2.weight
         self.d3_conv2.weight = self.d1_conv2.weight
@@ -138,19 +133,25 @@ class TridentBlock(nn.Module):
     def forward(self, x):
         residual = x
 
-        a = self.conv0(x)
+        out = self.conv1(x)
+        out = self.bn1(out)
+        out = self.relu(out)
 
-        # Dilation 1
-        out1 = self.conv1(a)
-        out1 = self.bn1(out1)
+        out1 = self.d1_conv2(out)
+        out1 = self.bn2(out1)
         out1 = self.relu(out1)
 
         out1 = self.d1_conv2(out1)
         out1 = self.bn2(out1)
         out1 = self.relu(out1)
 
-        out1 = self.conv3(out1)
-        out1 = self.bn3(out1)
+        out1 = self.d1_conv2(out1)
+        out1 = self.bn2(out1)
+        out1 = self.relu(out1)
+
+        out1 = self.d1_conv2(out1)
+        out1 = self.bn2(out1)
+        out1 = self.relu(out1)
 
         if self.downsample is not None:
             residual = self.downsample(x)
@@ -159,7 +160,7 @@ class TridentBlock(nn.Module):
         out1 = self.relu(out1)
 
         # Dilation 2
-        out2 = self.conv1(a)
+        out2 = self.conv1(out)
         out2 = self.bn1(out2)
         out_t2 = self.relu(out2)
 
@@ -169,8 +170,17 @@ class TridentBlock(nn.Module):
         out2 = self.bn2(out2)
         out2 = self.relu(out2)
 
-        out2 = self.conv3(out2)
-        out2 = self.bn3(out2)
+        out2 = self.d2_conv2(out2)
+        out2 = self.bn2(out2)
+        out2 = self.relu(out2)
+
+        out2 = self.d2_conv2(out2)
+        out2 = self.bn2(out2)
+        out2 = self.relu(out2)
+
+        out2 = self.d2_conv2(out2)
+        out2 = self.bn2(out2)
+        out2 = self.relu(out2)
 
         if self.downsample is not None:
             residual = self.downsample(x)
@@ -179,7 +189,7 @@ class TridentBlock(nn.Module):
         out2 = self.relu(out2)
 
         # Dilation 3
-        out3 = self.conv1(a)
+        out3 = self.conv1(out)
         out3 = self.bn1(out3)
         out_t3 = self.relu(out3)
 
@@ -189,8 +199,17 @@ class TridentBlock(nn.Module):
         out3 = self.bn2(out3)
         out3 = self.relu(out3)
 
-        out3 = self.conv3(out3)
-        out3 = self.bn3(out3)
+        out3 = self.d3_conv2(out3)
+        out3 = self.bn2(out3)
+        out3 = self.relu(out3)
+
+        out3 = self.d3_conv2(out3)
+        out3 = self.bn2(out3)
+        out3 = self.relu(out3)
+
+        out3 = self.d3_conv2(out3)
+        out3 = self.bn2(out3)
+        out3 = self.relu(out3)
 
         if self.downsample is not None:
             residual = self.downsample(x)

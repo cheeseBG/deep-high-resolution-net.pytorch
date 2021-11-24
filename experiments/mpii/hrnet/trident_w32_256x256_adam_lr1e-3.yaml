@@ -54,8 +54,8 @@ MODEL:
       NUM_BRANCHES: 2
       BLOCK: TRIDENT
       NUM_BLOCKS:
-      - 4
-      - 4
+      - 1
+      - 1
       NUM_CHANNELS:
       - 32
       - 64
@@ -65,9 +65,9 @@ MODEL:
       NUM_BRANCHES: 3
       BLOCK: TRIDENT
       NUM_BLOCKS:
-      - 4
-      - 4
-      - 4
+      - 1
+      - 1
+      - 1
       NUM_CHANNELS:
       - 32
       - 64
@@ -78,10 +78,10 @@ MODEL:
       NUM_BRANCHES: 4
       BLOCK: TRIDENT
       NUM_BLOCKS:
-      - 4
-      - 4
-      - 4
-      - 4
+      - 1
+      - 1
+      - 1
+      - 1
       NUM_CHANNELS:
       - 32
       - 64
@@ -91,7 +91,7 @@ MODEL:
 LOSS:
   USE_TARGET_WEIGHT: true
 TRAIN:
-  BATCH_SIZE_PER_GPU: 8
+  BATCH_SIZE_PER_GPU: 16
   SHUFFLE: true
   BEGIN_EPOCH: 0
   END_EPOCH: 210
