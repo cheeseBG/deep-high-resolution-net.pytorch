@@ -152,7 +152,7 @@ class TridentBlock(nn.Module):
         # Dilation 2
         out2 = self.d2_conv2(out)
         out_2_functional = F.conv2d(out, weight=self.weight, dilation=(2, 2), stride=(1, 1), padding=(2, 2))
-        #print(out2.sum() == out_2_functional.sum())  # checking if the outputs are same.
+        print(out2.sum() == out_2_functional.sum())  # checking if the outputs are same.
         out2 = self.bn2(out2)
         out2 = self.relu(out2)
 
@@ -165,7 +165,7 @@ class TridentBlock(nn.Module):
         # Dilation 3
         out3 = self.d3_conv2(out)
         out_3_functional = F.conv2d(out, weight=self.weight, dilation=(3, 3), stride=(1, 1), padding=(3, 3))
-        #print(out3.sum() == out_3_functional.sum())  # checking if the outputs are same.
+        print(out3.sum() == out_3_functional.sum())  # checking if the outputs are same.
         out3 = self.bn2(out3)
         out3 = self.relu(out3)
 
