@@ -140,8 +140,6 @@ class TridentBlock(nn.Module):
         out1 = self.d1_conv2(out)
         out1 = self.bn2(out1)
 
-        print(out1.shape)
-
         if self.downsample is not None:
             residual = self.downsample(x)
 
