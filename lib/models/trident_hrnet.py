@@ -178,8 +178,6 @@ class TridentBlock(nn.Module):
         #out = torch.cat((out1, out2, out3), 0)
         total_out = out1 + out2 + out3
 
-        torch.autograd.set_detect_anomaly(True)
-
         return total_out
 
 
