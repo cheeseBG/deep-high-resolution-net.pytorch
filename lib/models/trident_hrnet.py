@@ -174,10 +174,6 @@ class TridentBlock(nn.Module):
         out3 += residual
         out3 = self.relu(out3)
 
-        print(out1.shape)
-        print(out2.shape)
-        print(out3.shape)
-
         # jji: concatination이 맞음?
         #out = torch.cat((out1, out2, out3), 0)
         total_out = out1 + out2 + out3
