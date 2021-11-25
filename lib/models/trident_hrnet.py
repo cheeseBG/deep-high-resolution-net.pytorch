@@ -49,6 +49,8 @@ class BasicBlock(nn.Module):
         out = self.conv2(out)
         out = self.bn2(out)
 
+        print(out.shape)
+
         if self.downsample is not None:
             residual = self.downsample(x)
 
@@ -136,17 +138,10 @@ class TridentBlock(nn.Module):
         out = self.bn1(out)
         out = self.relu(out)
 
-        print("===first===")
-        print(out.shape)
-
-
         # Dilation 1
         out1 = self.d1_conv2(out)
         out1 = self.bn2(out1)
         out1 = self.relu(out1)
-
-        print("===second===")
-        print(out1.shape)
 
         if self.downsample is not None:
             residual = self.downsample(x)
