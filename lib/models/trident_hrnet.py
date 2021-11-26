@@ -143,10 +143,6 @@ class TridentBlock(nn.Module):
 
         out1 = self.d1_conv2(out1)
         out1 = self.bn2(out1)
-        out1 = self.relu(out1)
-
-        out1 = self.d1_conv2(out1)
-        out1 = self.bn2(out1)
 
         if self.downsample is not None:
             residual = self.downsample(x)
@@ -163,10 +159,6 @@ class TridentBlock(nn.Module):
 
         out2 = self.d2_conv2(out2)
         out2 = self.bn2(out2)
-        out2 = self.relu(out2)
-
-        out2 = self.d2_conv2(out2)
-        out2 = self.bn2(out2)
 
         if self.downsample is not None:
             residual = self.downsample(x)
@@ -178,10 +170,6 @@ class TridentBlock(nn.Module):
         out3 = self.d3_conv2(out)
         #out_3_functional = F.conv2d(out, weight=self.weight, dilation=(3, 3), stride=(1, 1), padding=(3, 3))
         #print(out3.sum() == out_3_functional.sum())  # checking if the outputs are same.
-        out3 = self.bn2(out3)
-        out3 = self.relu(out3)
-
-        out3 = self.d3_conv2(out3)
         out3 = self.bn2(out3)
         out3 = self.relu(out3)
 
