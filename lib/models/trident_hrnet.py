@@ -398,7 +398,9 @@ class PoseHighResolutionNet(nn.Module):
 
 
         # Trident net
-        self.planes = 64
+        self.planes = 32
+        self.conv3 = nn.Conv2d(64, 32, kernel_size=3, stride=1, padding=1,
+                               bias=False)
         self.d1_conv3 = nn.Conv2d(self.planes, self.planes, kernel_size=3, stride=1,
                                   dilation=1, padding=1, bias=False)
         self.d2_conv3 = nn.Conv2d(self.planes, self.planes, kernel_size=3, stride=1,
@@ -560,11 +562,12 @@ class PoseHighResolutionNet(nn.Module):
         x = self.relu(x)
 
         # Trident
+        t = self.conv3(x)
         length = 6
-        residual = x
+        residual = t
 
         # Dilation 1
-        out1 = self.d1_conv3(x)
+        out1 = self.d1_conv3(t)
         out1 = self.bn3(out1)
         out1 = self.relu(out1)
 
@@ -580,7 +583,7 @@ class PoseHighResolutionNet(nn.Module):
         out1 = self.relu(out1)
 
         # Dilation 2
-        out2 = self.d2_conv3(x)
+        out2 = self.d2_conv3(t)
         out2 = self.bn3(out2)
         out2 = self.relu(out2)
 
@@ -596,7 +599,7 @@ class PoseHighResolutionNet(nn.Module):
         out2 = self.relu(out2)
 
         # Dilation 3
-        out3 = self.d3_conv3(x)
+        out3 = self.d3_conv3(t)
         out3 = self.bn3(out3)
         out3 = self.relu(out3)
 
@@ -645,7 +648,6 @@ class PoseHighResolutionNet(nn.Module):
 
         # Trident module
 
-        print(y_list[0].shape)
         # Add
         x = self.final_layer(y_list[0] + total_out)
 
