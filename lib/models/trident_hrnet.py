@@ -569,7 +569,7 @@ class PoseHighResolutionNet(nn.Module):
         out1 = self.d1_conv3(x)
         out1 = self.bn3(out1)
         out1 = self.relu(out1)
-
+        print(out1.shape)
         for i in range(0, length):
             out1 = self.d1_conv3(out1)
             out1 = self.bn3(out1)
