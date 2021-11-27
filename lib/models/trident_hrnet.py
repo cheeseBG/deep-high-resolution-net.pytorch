@@ -563,6 +563,8 @@ class PoseHighResolutionNet(nn.Module):
         length = 6
         residual = x
 
+        print(residual.shape)
+
         # Dilation 1
         out1 = self.d1_conv3(x)
         out1 = self.bn3(out1)
