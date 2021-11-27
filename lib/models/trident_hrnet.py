@@ -396,6 +396,27 @@ class PoseHighResolutionNet(nn.Module):
         self.relu = nn.ReLU(inplace=True)
         self.layer1 = self._make_layer(Bottleneck, 64, 4)
 
+
+        # Trident net
+        self.planes = 64
+        self.d1_conv3 = nn.Conv2d(self.planes, self.planes, kernel_size=3, stride=1,
+                                  dilation=1, padding=1, bias=False)
+        self.d2_conv3 = nn.Conv2d(self.planes, self.planes, kernel_size=3, stride=1,
+                                  dilation=2, padding=2, bias=False)
+        self.d3_conv3 = nn.Conv2d(self.planes, self.planes, kernel_size=3, stride=1,
+                                  dilation=3, padding=3, bias=False)
+
+        self.bn3 = nn.BatchNorm2d(self.planes, momentum=BN_MOMENTUM)
+
+        # assigning weights
+        self.d2_conv3.weight = self.d1_conv3.weight
+        self.d3_conv3.weight = self.d1_conv3.weight
+
+        # using weights and functional conv to check weight sharing
+        self.weight = self.d1_conv3.weight
+
+
+
         self.stage2_cfg = extra['STAGE2']
         num_channels = self.stage2_cfg['NUM_CHANNELS'] # 32, 64
         block = blocks_dict[self.stage2_cfg['BLOCK']]
@@ -437,9 +458,6 @@ class PoseHighResolutionNet(nn.Module):
         )
 
         self.pretrained_layers = extra['PRETRAINED_LAYERS']
-
-        # Trident
-        self.tridentNet = TridentBlock(self.inplanes, 32)
 
     def _make_transition_layer(
             self, num_channels_pre_layer, num_channels_cur_layer):
@@ -540,6 +558,65 @@ class PoseHighResolutionNet(nn.Module):
         x = self.conv2(x)
         x = self.bn2(x)
         x = self.relu(x)
+
+        # Trident
+        length = 6
+        residual = x
+
+        # Dilation 1
+        out1 = self.d1_conv3(x)
+        out1 = self.bn3(out1)
+        out1 = self.relu(out1)
+
+        for i in range(0, length):
+            out1 = self.d1_conv3(out1)
+            out1 = self.bn3(out1)
+            out1 = self.relu(out1)
+
+        out1 = self.d1_conv3(out1)
+        out1 = self.bn3(out1)
+
+        out1 += residual
+        out1 = self.relu(out1)
+
+        # Dilation 2
+        out2 = self.d2_conv3(x)
+        out2 = self.bn3(out2)
+        out2 = self.relu(out2)
+
+        for i in range(0, length):
+            out2 = self.d2_conv3(out2)
+            out2 = self.bn3(out2)
+            out2 = self.relu(out2)
+
+        out2 = self.d2_conv3(out2)
+        out2 = self.bn3(out2)
+
+        out2 += residual
+        out2 = self.relu(out2)
+
+        # Dilation 3
+        out3 = self.d3_conv3(x)
+        out3 = self.bn3(out3)
+        out3 = self.relu(out3)
+
+        for i in range(0, length):
+            out3 = self.d3_conv3(out3)
+            out3 = self.bn3(out3)
+            out3 = self.relu(out3)
+
+        out3 = self.d3_conv3(out3)
+        out3 = self.bn3(out3)
+
+        out3 += residual
+        out3 = self.relu(out3)
+
+        # jji: concatination이 맞음?
+        # out = torch.cat((out1, out2, out3), 0)
+        total_out = out1 + out2 + out3
+
+
+
         x = self.layer1(x)
 
         x_list = []
@@ -567,10 +644,10 @@ class PoseHighResolutionNet(nn.Module):
         y_list = self.stage4(x_list)
 
         # Trident module
-        trident_output = self.tridentNet.forward(x)
+
 
         # Add
-        x = self.final_layer(y_list[0] + trident_output)
+        x = self.final_layer(y_list[0] + total_out)
 
         return x
 
