@@ -563,13 +563,11 @@ class PoseHighResolutionNet(nn.Module):
         length = 6
         residual = x
 
-        print(residual.shape)
-
         # Dilation 1
         out1 = self.d1_conv3(x)
         out1 = self.bn3(out1)
         out1 = self.relu(out1)
-        print(out1.shape)
+
         for i in range(0, length):
             out1 = self.d1_conv3(out1)
             out1 = self.bn3(out1)
@@ -647,7 +645,7 @@ class PoseHighResolutionNet(nn.Module):
 
         # Trident module
 
-
+        print(y_list[0].shape)
         # Add
         x = self.final_layer(y_list[0] + total_out)
 
