@@ -130,6 +130,7 @@ class TridentBlock(nn.Module):
         self.weight = self.d1_conv2.weight
 
     def forward(self, x):
+        length = 6
         residual = x
 
         out = self.conv1(x)
@@ -140,6 +141,11 @@ class TridentBlock(nn.Module):
         out1 = self.d1_conv2(out)
         out1 = self.bn2(out1)
         out1 = self.relu(out1)
+
+        for i in range(0, length):
+            out1 = self.d1_conv2(out1)
+            out1 = self.bn2(out1)
+            out1 = self.relu(out1)
 
         out1 = self.d1_conv2(out1)
         out1 = self.bn2(out1)
@@ -157,6 +163,11 @@ class TridentBlock(nn.Module):
         out2 = self.bn2(out2)
         out2 = self.relu(out2)
 
+        for i in range(0, length):
+            out2 = self.d2_conv2(out2)
+            out2 = self.bn2(out2)
+            out2 = self.relu(out2)
+
         out2 = self.d2_conv2(out2)
         out2 = self.bn2(out2)
 
@@ -172,6 +183,11 @@ class TridentBlock(nn.Module):
         #print(out3.sum() == out_3_functional.sum())  # checking if the outputs are same.
         out3 = self.bn2(out3)
         out3 = self.relu(out3)
+
+        for i in range(0, length):
+            out3 = self.d3_conv2(out3)
+            out3 = self.bn2(out3)
+            out3 = self.relu(out3)
 
         out3 = self.d3_conv2(out3)
         out3 = self.bn2(out3)
@@ -422,6 +438,9 @@ class PoseHighResolutionNet(nn.Module):
 
         self.pretrained_layers = extra['PRETRAINED_LAYERS']
 
+        # Trident
+        self.tridentNet = TridentBlock(self.inplanes, 32)
+
     def _make_transition_layer(
             self, num_channels_pre_layer, num_channels_cur_layer):
         num_branches_cur = len(num_channels_cur_layer)
@@ -547,7 +566,11 @@ class PoseHighResolutionNet(nn.Module):
                 x_list.append(y_list[i])
         y_list = self.stage4(x_list)
 
-        x = self.final_layer(y_list[0])
+        # Trident module
+        trident_output = self.tridentNet.forward(x)
+
+        # Add
+        x = self.final_layer(y_list[0] + trident_output)
 
         return x
 
