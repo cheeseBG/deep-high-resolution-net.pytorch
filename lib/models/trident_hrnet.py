@@ -563,7 +563,7 @@ class PoseHighResolutionNet(nn.Module):
 
         # Trident
         t = self.conv3(x)
-        length = 6
+        length = 10
         residual = t
 
         # Dilation 1
